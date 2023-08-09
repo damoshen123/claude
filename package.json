@@ -1,0 +1,41 @@
+{
+  "name": "clewd",
+  "version": "2.6",
+  "description": ":^)",
+  "main": "clewd.js",
+  "engines": {
+    "node": ">=20.4"
+  },
+  "scripts": {
+    "run": "node clewd.js"
+  },
+  "keywords": [
+    "doom",
+    "coom"
+  ],
+  "author": "ahsk",
+  "homepage": "https://gitgud.io/ahsk/clewd",
+  "repository": {
+    "type": "git",
+    "url": "git+https://gitgud.io/ahsk/clewd.git"
+  },
+  "bugs": {
+    "url": "https://gitgud.io/ahsk/clewd/-/issues"
+  },
+  "dependencies": {
+    "http": "^0.0.1-security",
+    "http-proxy-agent": "^7.0.0",
+    "https": "^1.0.0",
+    "https-proxy-agent": "^5.0.1",
+    "localtunnel": "^2.0.2",
+    "make-fetch-happen": "^6.1.0",
+    "node-fetch": "^3.1.0",
+    "proxy-agent": "^6.3.0",
+    "stream": "^0.0.2",
+    "web-streams-polyfill": "^3.2.1"
+  },
+  "devDependencies": {
+    "axios": "^1.4.0",
+    "tunnel-agent": "^0.6.0"
+  }
+}
