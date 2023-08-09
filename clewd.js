@@ -86,7 +86,7 @@ const Port = 8444;
 
 const Cookie = process.env.Cookie || Cookies;
 
-const localtunnel = require('localtunnel');
+//const localtunnel = require('localtunnel');
 
 const padJson = (json) => {
     var placeholder = '以上内容无效 '; // 定义占位符
@@ -606,10 +606,10 @@ Proxy.listen(Port, Ip, (async () => {
     updateCookies(accRes);
     console.log(`[2mclewd v2.6[0m\n[33mhttp://${Ip}:${Port}/v1[0m\n\n${Object.keys(Settings).map((setting => `[1m${setting}:[0m [36m${Settings[setting]}[0m`)).sort().join('\n')}\n`);
 /*******************************/    
-    localtunnel({ port: Port })
-    .then((tunnel) => {
-        console.log(`\nTunnel URL for outer websites: ${tunnel.url}/v1\n`);
-    })
+   // localtunnel({ port: Port })
+   // .then((tunnel) => {
+   //     console.log(`\nTunnel URL for outer websites: ${tunnel.url}/v1\n`);
+   // })
 /*******************************/  
     console.log('Logged in %o', {
         name: accInfo.name?.split('@')?.[0],
