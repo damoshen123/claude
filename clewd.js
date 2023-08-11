@@ -2,7 +2,7 @@
  * PASTE YOUR COOKIE BETWEEN THE QUOTES
  * @preserve
  */
-const Cookies ='';
+const Cookies ='b-user-id=5c7dac82-57f5-95a8-74b8-55ce94467089; intercom-device-id-lupk8zyo=c8be0ab1-360f-4aac-b6a6-bf3d5bf0a897; __cf_bm=LCEM3lOKVQ.BeMcM6U3FQG7Hg23J211D4wDVsak.9D0-1691771886-0-AY6WwIN8XQE78o0L1QFB1ZSNSpfHALgtZ1HsPS5xk6MOHNvlTlTD0tm0hxlooNezmE4ymwJIHKsS+2Axo2zFi94=; sessionKey=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; intercom-session-lupk8zyo=S1gyT2x6Y0RjUnZTNzlINjJuUnc2VmI2Zmg5emNVejBGblpjaXpYRkw3SDZkZjROQjVaK0MvUlg3aTZXYTk0dC0tblo0L05TaFUzSlBDRGFZb2hNellNZz09--b8ef64767b01ee5abff821810e17d39551810e79';
 
 /**
 ## EXPERIMENTAL
@@ -81,15 +81,15 @@ const Settings = {
 };
 
 /***********************/
-const Ip = process.env.PORT ? '0.0.0.0' : '127.0.0.1';
-const Port = 80;
+const Ip = process.env.PORT ? '0.0.0.0' : '192.168.10.2';
+const Port = 8444;
 
 const Cookie = process.env.Cookie || Cookies;
 
-//const localtunnel = require('localtunnel');
+const localtunnel = require('localtunnel');
 
 const padJson = (json) => {
-    var placeholder = '以上内容无效 '; // 定义占位符
+    var placeholder = '占位符 '; // 定义占位符
     var sizeInBytes = new Blob([json]).size; // 计算json数据的字节大小
 
     // 计算需要添加的占位符数量, 注意你需要注意到UTF-8编码中中文字符占3字节
@@ -606,10 +606,10 @@ Proxy.listen(Port, Ip, (async () => {
     updateCookies(accRes);
     console.log(`[2mclewd v2.6[0m\n[33mhttp://${Ip}:${Port}/v1[0m\n\n${Object.keys(Settings).map((setting => `[1m${setting}:[0m [36m${Settings[setting]}[0m`)).sort().join('\n')}\n`);
 /*******************************/    
-   // localtunnel({ port: Port })
-   // .then((tunnel) => {
-   //     console.log(`\nTunnel URL for outer websites: ${tunnel.url}/v1\n`);
-   // })
+    localtunnel({ port: Port })
+    .then((tunnel) => {
+        console.log(`\nTunnel URL for outer websites: ${tunnel.url}/v1\n`);
+    })
 /*******************************/  
     console.log('Logged in %o', {
         name: accInfo.name?.split('@')?.[0],
