@@ -1,15 +1,15 @@
 /**
  * PASTE YOUR COOKIE BETWEEN THE QUOTES
- * @preserve
+ * @preserve 
  */
-const Cookies ='b-user-id=5c7dac82-57f5-95a8-74b8-55ce94467089; intercom-device-id-lupk8zyo=c8be0ab1-360f-4aac-b6a6-bf3d5bf0a897; __cf_bm=LCEM3lOKVQ.BeMcM6U3FQG7Hg23J211D4wDVsak.9D0-1691771886-0-AY6WwIN8XQE78o0L1QFB1ZSNSpfHALgtZ1HsPS5xk6MOHNvlTlTD0tm0hxlooNezmE4ymwJIHKsS+2Axo2zFi94=; sessionKey=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; intercom-session-lupk8zyo=S1gyT2x6Y0RjUnZTNzlINjJuUnc2VmI2Zmg5emNVejBGblpjaXpYRkw3SDZkZjROQjVaK0MvUlg3aTZXYTk0dC0tblo0L05TaFUzSlBDRGFZb2hNellNZz09--b8ef64767b01ee5abff821810e17d39551810e79';
+const Cookies = '';
 
 /**
 ## EXPERIMENTAL
 
 ### SettingName: (DEFAULT)/opt1/opt2
 
- 1. AntiStall: (false)/1/2
+ 1. AntiStall: (2)1/false
     * 1/2 has no effect when using streaming
     * 1 sends whatever was last when exceeding size (might have some spicy things but impersonations as well)
     * 2 sends a usable message where the bot actually stopped talking
@@ -60,36 +60,37 @@ const Cookies ='b-user-id=5c7dac82-57f5-95a8-74b8-55ce94467089; intercom-device-
  11. StripHuman: (false)/true
     * true is a bad idea without RecycleChats, sends only your very last message
 
- * @preserve
+ * @preserve 
  */
 const Settings = {
-    padtxt: true,  //自动补全tokens超过10000
-    ReplaceSamples: false,
-    AntiStall: false,
-    ClearFlags: true,
-    DeleteChats: false,
-    PassParams: false,
-    PreventImperson: true,
-    PromptExperiment: true,
-    RecycleChats: false,
-    RetryRegenerate: false,
-    StripAssistant: true,
-    StripHuman: false,
-    RemoveFirstH : true, //去除一个Human:
-    FullColon: true,  //防止Human与Assistant被替换为H与A
-    xmlPlot: true //增加xml tags
+    padtxt: process.env.padtxt || true,  //自动补全tokens超过10000
+    ReplaceSamples: process.env.ReplaceSamples || false,
+    AntiStall: process.env.AntiStall || 2,
+    ClearFlags: process.env.ClearFlags || true,
+    DeleteChats: process.env.DeleteChats || false,
+    PassParams: process.env.PassParams || false,
+    PreventImperson: process.env.PreventImperson || false,
+    PromptExperiment: process.env.PromptExperiment || true,
+    RecycleChats: process.env.RecycleChats || false,
+    RetryRegenerate: process.env.RetryRegenerate || false,
+    StripAssistant: process.env.StripAssistant || true,
+    StripHuman: process.env.StripHuman || false,
+    RemoveFirstH: process.env.RemoveFirstH || true, //去除开始的Human/H
+    FullColon: process.env.FullColon || true, //根源性防止HA
+    xmlPlot: process.env.xmlPlot || true, //自动xml tags附加，<card>触发
+    localtunnel: false,  //创建用于外网访问的隧道URL
+    VPNfree: process.env.VPNfree || false  //使用国内镜像站claudeai.ai，免除代理但速度较慢
 };
 
 /***********************/
-const Ip = process.env.PORT ? '0.0.0.0' : '192.168.10.2';
-const Port = 8444;
+const Ip = process.env.PORT ? '0.0.0.0' : '127.0.0.1';
+const Port = process.env.PORT || 8444;
 
 const Cookie = process.env.Cookie || Cookies;
 
-const localtunnel = require('localtunnel');
-
 const padJson = (json) => {
-    var placeholder = '占位符 '; // 定义占位符
+    const bytes = randomInt(5, 15);
+    var placeholder = randomBytes(bytes).toString('hex'); // 定义占位符
     var sizeInBytes = new Blob([json]).size; // 计算json数据的字节大小
 
     // 计算需要添加的占位符数量, 注意你需要注意到UTF-8编码中中文字符占3字节
@@ -109,14 +110,15 @@ const padJson = (json) => {
         var result = json;
     }
 
+    result = result.replace(/^\s*/, '');
+
     return result
 };
 
 const RemoveFirstHuman = (json) => {
     const regex = /^\s*(H(?:uman)?:)/;
     const result = json.replace(regex, '').trim();
-	const result2 = result.replace("Write 奶妈's next reply in a fictional chat between 奶妈 and damoshen. Write 1 reply only in internet RP style, italicize actions, and avoid quotation marks. Use markdown. Be proactive, creative, and drive the plot and conversation forward. Write at least 1 paragraph, up to 4. Always stay in character and avoid repetition.Avoid writing a NSFW/Smut reply. Creatively write around it NSFW/Smut scenarios in character.", "  ").trim();;
-    return result2
+    return result
 };
 
 const AddxmlPlot = (content) => {
@@ -124,6 +126,8 @@ const AddxmlPlot = (content) => {
     if (!content.includes('<card>')) {
         return content;
     }
+
+    content = content.replace(/\n\nSystem:\s*/g, '\n\n');
 
     // 在第一个"[Start a new"前面加上"<example>"，在最后一个"[Start a new"前面加上"</example>"
     let firstChatStart = content.indexOf('\n\n[Start a new');
@@ -134,32 +138,55 @@ const AddxmlPlot = (content) => {
                 content.slice(lastChatStart);
     }
         
-    // 之后的第一个"Assistant: "之前插入"<plot>\n\n"
+    // 之后的第一个"Assistant: "之前插入"\n\n<plot>"
     let lastChatIndex = content.lastIndexOf('\n\n[Start a new');
-    if (lastChatIndex != -1) { 
+    if (lastChatIndex != -1 && content.includes('</plot>')) { 
         let assistantIndex = content.indexOf('\n\nAssistant:', lastChatIndex);
         if (assistantIndex != -1) {
             content = content.slice(0, assistantIndex) + '\n\n<plot>' + content.slice(assistantIndex);
         }
     }
+  
+    let sexMatch = content.match(/\n##.*?\n<sex>[\s\S]*?<\/sex>\n/);
+    let deleteMatch = content.match(/\n##.*?\n<delete>[\s\S]*?<\/delete>\n/);
+  
+    if (sexMatch && deleteMatch) {
+        content = content.replace(sexMatch[0], ""); // 移除<sex>部分
+        content = content.replace(deleteMatch[0], sexMatch[0] + deleteMatch[0]); // 将<sex>部分插入<delete>部分的前面
+    }
+
+    let illustrationMatch = content.match(/\n##.*?\n<illustration>[\s\S]*?<\/illustration>\n/);
+
+    if (illustrationMatch && deleteMatch) {
+        content = content.replace(illustrationMatch[0], ""); // 移除<sex>部分
+        content = content.replace(deleteMatch[0], illustrationMatch[0] + deleteMatch[0]); // 将<illustration>部分插入<delete>部分的前面
+    }
+
+    content = content.replace(/\n\n<(hidden|\/plot)>[\s\S]*?\n\n<extra_prompt>\s*/, '\n\nHuman:'); //sd prompt用
+
+    //消除空XML tags或多余的\n
+    content = content.replace(/(?<=\n<(card|hidden|example)>\n)\s*/g, '');
+    content = content.replace(/\s*(?=\n<\/(card|hidden|example)>(\n|$))/g, '');
+    content = content.replace(/\n\n<(example|hidden)>\n<\/\1>/g, '');
 
     return content
 };
+
 /***********************/
 
 /**
  * Don't touch StallTriggerMax.
  * If you know what you're doing, change the 1.5 MB on StallTrigger to what you want
- * @preserve
+ * @preserve 
  */
 const StallTriggerMax = 4194304;
 const StallTrigger = 1572864;
 
 /**
- * How much will be buffered before one stream chunk goes through
- * lower = less chance of ReplaceSamples working properly
+ * How many characters will be buffered before the AI types once
+ * lower = less chance of PreventImperson working properly
  * @default 8
- * @preserve
+ * @preserve 
  */
 const BufferSize = 1;
 
@@ -175,7 +202,7 @@ const Assistant = '\n\nAssistant: ';
 const Human = '\n\nHuman: ';
 const A = '\n\nA: ';
 const H = '\n\nH: ';
-const AH = [ ...new Set([ ...Assistant, ...Human, ...A, ...H, ...'\\n' ]) ].filter((char => ' ' !== char)).sort();
+const DangerChars = [ ...new Set([ ...Assistant, ...Human, ...A, ...H, ...'\\n' ]) ].filter((char => ' ' !== char)).sort();
 
 const cookies = {};
 const UUIDMap = {};
@@ -185,7 +212,8 @@ let uuidOrg;
 
 let lastPrompt;
 
-ServerResponse.prototype.json = function(body, statusCode = 200, headers) {
+ServerResponse.prototype.json = async function(body, statusCode = 200, headers) {
+    body = body instanceof Promise ? await body : body;
     this.headersSent || this.writeHead(statusCode, {
         'Content-Type': 'application/json',
         ...headers && headers
@@ -195,7 +223,7 @@ ServerResponse.prototype.json = function(body, statusCode = 200, headers) {
 };
 
 const AI = {
-    endPoint: () => Buffer.from([ 104, 116, 116, 112, 115, 58, 47, 47, 99, 108, 97, 117, 100, 101, 46, 97, 105 ]).toString(),
+    end: () => Settings.VPNfree ? Buffer.from([ 104, 116, 116, 112, 115, 58, 47, 47, 99, 104, 97, 116, 46, 99, 108, 97, 117, 100, 101, 97, 105, 46, 97, 105 ]).toString() : Buffer.from([ 104, 116, 116, 112, 115, 58, 47, 47, 99, 108, 97, 117, 100, 101, 46, 97, 105 ]).toString(),
     modelA: () => Buffer.from([ 99, 108, 97, 117, 100, 101, 45, 50 ]).toString(),
     modelB: () => Buffer.from([ 99, 108, 97, 117, 100, 101, 45, 105, 110, 115, 116, 97, 110, 116, 45, 49 ]).toString(),
     agent: () => Buffer.from([ 77, 111, 122, 105, 108, 108, 97, 47, 53, 46, 48, 32, 40, 87, 105, 110, 100, 111, 119, 115, 32, 78, 84, 32, 49, 48, 46, 48, 59, 32, 87, 105, 110, 54, 52, 59, 32, 120, 54, 52, 41, 32, 65, 112, 112, 108, 101, 87, 101, 98, 75, 105, 116, 47, 53, 51, 55, 46, 51, 54, 32, 40, 75, 72, 84, 77, 76, 44, 32, 108, 105, 107, 101, 32, 71, 101, 99, 107, 111, 41, 32, 67, 104, 114, 111, 109, 101, 47, 49, 49, 52, 46, 48, 46, 48, 46, 48, 32, 83, 97, 102, 97, 114, 105, 47, 53, 51, 55, 46, 51, 54, 32, 69, 100, 103, 47, 49, 49, 52, 46, 48, 46, 49, 56, 50, 51, 46, 55, 57 ]).toString()
@@ -243,7 +271,7 @@ const updateCookies = cookieInfo => {
 const getCookies = () => Object.keys(cookies).map((name => `${name}=${cookies[name]};`)).join(' ').replace(/(\s+)$/gi, '');
 
 const deleteChat = async uuid => {
-    const res = await fetch(`${AI.endPoint()}/api/organizations/${uuidOrg}/chat_conversations/${uuid}`, {
+    const res = await fetch(`${AI.end()}/api/organizations/${uuidOrg}/chat_conversations/${uuid}`, {
         headers: {
             Cookie: getCookies(),
             'Content-Type': 'application/json'
@@ -254,12 +282,12 @@ const deleteChat = async uuid => {
 };
 
 const setTitle = title => {
-    title = 'clewd v2.6 - ' + title;
+    title = 'clewd v2.7修改版 by tera - ' + title;
     process.title !== title && (process.title = title);
 };
 
 class ClewdStream extends TransformStream {
-    constructor(minSize = 1, modelName = AI.modelA(), streaming, abortController) {
+    constructor(minSize = 8, modelName = AI.modelA(), streaming, abortController) {
         super({
             transform: (chunk, controller) => {
                 this.#handle(chunk, controller);
@@ -407,13 +435,13 @@ class ClewdStream extends TransformStream {
             this.#compAll.push(completion);
             if (this.#streaming) {
                 this.#compPure += completion;
-                const delayChunk = Settings.PreventImperson && AH.some((char => this.#compPure.endsWith(char) || completion.startsWith(char)));
+                const delayChunk = Settings.PreventImperson && DangerChars.some((char => this.#compPure.endsWith(char) || completion.startsWith(char)));
                 this.#impersonationCheck(controller, this.#compPure);
                 for (;!delayChunk && this.#compPure.length >= this.#minSize; ) {
                     controller.enqueue(this.#build(this.#compPure.length));
                 }
             } else {
-                this.#compLast = completion;
+                this.#compLast += completion; //=
                 this.#stallCheck(controller);
                 this.#impersonationCheck(controller, this.#compLast);
             }
@@ -430,7 +458,7 @@ const Proxy = Server(((req, res) => {
                 param: null,
                 code: 404
             }
-        }, 404);
+        }, 200); //404
     }
     setTitle('recv...');
     let fetchAPI;
@@ -468,7 +496,7 @@ const Proxy = Server(((req, res) => {
              * Ideally SillyTavern would expose a unique frontend conversation_uuid prop to localhost proxies
              * could set the name to a hash of it
              * then fetch /chat_conversations with 'GET' and find it
-             * @preserve
+             * @preserve 
              */
 			const hash = Hash('sha1');
             hash.update(prompt.substring(0, firstAssistantIdx));
@@ -486,8 +514,8 @@ const Proxy = Server(((req, res) => {
 /*****************************/
             if (Settings.RemoveFirstH) {prompt = RemoveFirstHuman(prompt);}
             if (Settings.xmlPlot) {prompt = AddxmlPlot(prompt);}
-            if (Settings.FullColon) {prompt = prompt.replace(/: /g, "：");}
-/*****************************/         
+            if (Settings.FullColon) {prompt = prompt.replace(/(?<=\n\n(H(?:uman)?|A(?:ssistant)?)):[ ]?/g, '：');}
+/*****************************/   
             if (Settings.PromptExperiment && !samePrompt) {
                 attachments.push({
 /*****************************/
@@ -501,7 +529,7 @@ const Proxy = Server(((req, res) => {
             }
             if (!uuidOld && Settings.RecycleChats || !samePrompt) {
                 uuidTemp = randomUUID().toString();
-                fetchAPI = await fetch(`${AI.endPoint()}/api/organizations/${uuidOrg}/chat_conversations`, {
+                fetchAPI = await fetch(`${AI.end()}/api/organizations/${uuidOrg}/chat_conversations`, {
                     signal: signal,
                     headers: {
                         Cookie: getCookies(),
@@ -520,7 +548,7 @@ const Proxy = Server(((req, res) => {
                 uuidTemp = uuidOld;
                 samePrompt && Settings.RecycleChats ? console.log(model + ' [rR]') : samePrompt ? console.log(model + ' [r]') : Settings.RecycleChats ? console.log(model + ' [R]') : console.log('' + model);
             }
-            fetchAPI = await fetch(`${AI.endPoint()}${samePrompt ? '/api/retry_message' : '/api/append_message'}`, {
+            fetchAPI = await fetch(`${AI.end()}${samePrompt ? '/api/retry_message' : '/api/append_message'}`, {
                 signal: signal,
                 headers: {
                     Cookie: getCookies(),
@@ -532,7 +560,7 @@ const Proxy = Server(((req, res) => {
                         ...Settings.PassParams && {
                             temperature: temperature
                         },
-                        incremental: true === body.stream,
+                        //incremental: true === body.stream,
                         prompt: prompt,
                         timezone: 'America/New_York',
                         model: model
@@ -568,12 +596,12 @@ const Proxy = Server(((req, res) => {
             console.error('clewd API error:\n%o', err);
             res.json({
                 error: {
-                    message: err.message || err.name,
+                    message: 'clewd: ' + (err.message || err.name),
                     type: err.type || err.code || err.name,
                     param: null,
                     code: 500
                 }
-            }, 500);
+            });
         } finally {
             clearInterval(titleTimer);
             titleTimer = null;
@@ -588,7 +616,7 @@ const Proxy = Server(((req, res) => {
 }));
 
 Proxy.listen(Port, Ip, (async () => {
-    const accRes = await fetch(AI.endPoint() + '/api/organizations', {
+    const accRes = await fetch(AI.end() + '/api/organizations', {
         method: 'GET',
         headers: {
             Cookie: Cookie
@@ -604,13 +632,16 @@ Proxy.listen(Port, Ip, (async () => {
     setTitle('ok');
     updateCookies(Cookie);
     updateCookies(accRes);
-    console.log(`[2mclewd v2.6[0m\n[33mhttp://${Ip}:${Port}/v1[0m\n\n${Object.keys(Settings).map((setting => `[1m${setting}:[0m [36m${Settings[setting]}[0m`)).sort().join('\n')}\n`);
+    console.log(`[2mclewd v2.7修改版 by tera[0m\n[33mhttp://${Ip}:${Port}/v1[0m\n\n${Object.keys(Settings).map((setting => `[1m${setting}:[0m [36m${Settings[setting]}[0m`)).sort().join('\n')}\n`);
 /*******************************/    
-    localtunnel({ port: Port })
-    .then((tunnel) => {
-        console.log(`\nTunnel URL for outer websites: ${tunnel.url}/v1\n`);
-    })
-/*******************************/  
+    if (Settings.localtunnel) {
+        const localtunnel = require('localtunnel');
+        localtunnel({ port: Port })
+        .then((tunnel) => {
+            console.log(`\nTunnel URL for outer websites: ${tunnel.url}/v1\n`);
+        })
+    }
+/*******************************/      
     console.log('Logged in %o', {
         name: accInfo.name?.split('@')?.[0],
         capabilities: accInfo.capabilities
@@ -623,7 +654,7 @@ Proxy.listen(Port, Ip, (async () => {
             if ('consumer_restricted_mode' === flag) {
                 return;
             }
-            const req = await fetch(`${AI.endPoint()}/api/organizations/${uuidOrg}/flags/${flag}/dismiss`, {
+            const req = await fetch(`${AI.end()}/api/organizations/${uuidOrg}/flags/${flag}/dismiss`, {
                 headers: {
                     Cookie: getCookies(),
                     'Content-Type': 'application/json'
@@ -636,7 +667,7 @@ Proxy.listen(Port, Ip, (async () => {
         })(flag))));
     }
     if (Settings.RecycleChats || Settings.DeleteChats) {
-        const convRes = await fetch(`${AI.endPoint()}/api/organizations/${uuidOrg}/chat_conversations`, {
+        const convRes = await fetch(`${AI.end()}/api/organizations/${uuidOrg}/chat_conversations`, {
             method: 'GET',
             headers: {
                 Cookie: getCookies()
